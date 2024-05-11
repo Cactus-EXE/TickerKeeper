@@ -1,0 +1,2 @@
+﻿ALTER TABLE Customer
+ADD CreationDate DATETIME DEFAULT GETDATE();

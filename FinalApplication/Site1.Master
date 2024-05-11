@@ -1,0 +1,100 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Site1.master.cs" Inherits="FinalApplication.Site1" %>
+<!DOCTYPE html>
+<html lang="en">
+<head runat="server">
+    <title>Ticket Keeper</title>
+    <link rel="stylesheet" type="text/css" href="~/Site.css" />
+    <asp:ContentPlaceHolder ID="head" runat="server"></asp:ContentPlaceHolder>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        .dropdown-menu {
+            display: none;
+            background-color: white;
+            border: 1px solid #ccc;
+            max-height: 200px;
+            overflow-y: auto;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .dropdown-menu li {
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+
+        .dropdown-menu li:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <form runat="server">
+        <div class="header">
+            <h1>Welcome to Ticket Keeper</h1>
+            <ul class="nav">
+                <li><a href="/Default.aspx">Home</a></li>
+                <li><a href="/CustomerList.aspx">Customer List</a></li>
+                <li><a href="/CreateCustomer.aspx">Create Customer</a></li>
+                <li><a href="/RepairList.aspx">Repair List</a></li>
+            </ul>
+
+            <!-- Search Bar -->
+            <input type="text" id="searchBox" class="search-bar" placeholder="Search Customers or Tickets" autocomplete="off" />
+            <ul id="dropdownMenu" class="dropdown-menu"></ul>
+        </div>
+
+        <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+    </form>
+    <script>
+        $(document).ready(function () {
+            $("#searchBox").on("input", function () {
+                var query = $(this).val().trim();
+                if (query.length < 2) {
+                    $("#dropdownMenu").hide();
+                    return;
+                }
+
+                $.ajax({
+                    url: "/api/search/query?q=" + encodeURIComponent(query),
+                    method: "GET",
+                    success: function (data) {
+                        var dropdown = $("#dropdownMenu");
+                        dropdown.empty();
+
+                        if (data.length > 0) {
+                            $.each(data, function (index, item) {
+                                var li = $("<li>").text(item.DisplayName)
+                                    .attr("data-type", item.Type)
+                                    .attr("data-id", item.Id);
+                                dropdown.append(li);
+                            });
+
+                            dropdown.show();
+                        } else {
+                            dropdown.hide();
+                        }
+                    }
+                });
+            });
+
+            $("#dropdownMenu").on("click", "li", function () {
+                var type = $(this).attr("data-type");
+                var id = $(this).attr("data-id");
+
+                if (type === "Customer") {
+                    window.location.href = "/CustomerDetails.aspx?CustomerId=" + id;
+                } else if (type === "Repair") {
+                    window.location.href = "/TicketDetails.aspx?RepairId=" + id;
+                }
+            });
+
+            $(document).click(function (e) {
+                if (!$(e.target).closest("#searchBox, #dropdownMenu").length) {
+                    $("#dropdownMenu").hide();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
